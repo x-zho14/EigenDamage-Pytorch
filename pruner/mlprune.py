@@ -138,7 +138,7 @@ class MLPruner:
 
             if int(torch.sum(new_masks[m])) == 0:
                 print("pruned all")
-                temp_thre = get_threshold(np.abs(imps.view(-1).data.cpu().numpy()).tolist(), 0.001)
+                temp_thre = get_threshold(np.abs(imps.view(-1).data.cpu().numpy()).tolist(), 0.999)
                 print("0.001 thre", temp_thre)
                 new_masks[m] = np.where(np.abs(imps.data.cpu().numpy() / norms.get(m, 1.0)) <= temp_thre,np.zeros(mask.shape), mask)
                 new_masks[m] = torch.from_numpy(new_masks[m]).float().cuda().requires_grad_(False)
