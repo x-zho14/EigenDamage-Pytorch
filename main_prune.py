@@ -81,7 +81,8 @@ def init_network(config, logger, device):
                                                                          checkpoint['acc'], checkpoint['epoch'],
                                                                          checkpoint['loss']))
     model_state_dict = net.state_dict()
-    pretrained = checkpoint['state_dict']
+    pretrained = checkpoint['net'] if checkpoint.get('net', None) is not None else checkpoint['state_dict']
+
     for k, v in pretrained.items():
         if k not in model_state_dict or v.size() != model_state_dict[k].size():
             if k not in model_state_dict:
