@@ -27,7 +27,7 @@ def get_bottleneck_builder(network):
     elif network == 'presnet':
         return BottleneckPResNet
     else:
-        raise BottleneckResNet
+        return BottleneckResNet
 
 
 def stablize_bn(net, trainloader, device='cuda'):
