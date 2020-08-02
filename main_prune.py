@@ -68,6 +68,7 @@ def init_network(config, logger, device):
     net = get_network(network=config.network,
                       depth=config.depth,
                       dataset=config.dataset)
+    net = torch.nn.DataParallel(net).cuda()
     print('==> Loading checkpoint from %s.' % config.checkpoint)
     logger.info('==> Loading checkpoint from %s.' % config.checkpoint)
     checkpoint = torch.load(config.checkpoint, map_location=torch.device("cuda:0"))
@@ -80,14 +81,23 @@ def init_network(config, logger, device):
                                                                          checkpoint['acc'], checkpoint['epoch'],
                                                                          checkpoint['loss']))
     model_state_dict = net.state_dict()
-    state_dict = checkpoint['net'] if checkpoint.get('net', None) is not None else checkpoint['state_dict']
-    for k, v in state_dict.items():
-        print(k)
+    pretrained = checkpoint['state_dict']
+    for k, v in pretrained.items():
         if k not in model_state_dict or v.size() != model_state_dict[k].size():
+            if k not in model_state_dict:
+                print("not in state dict", model_state_dict.keys())
+            elif v.size() != model_state_dict[k].size():
+                print("size not match,", v.size(), model_state_dict[k].size())
             print("IGNORE:", k)
         else:
             print("LOAD:", k)
-    net.load_state_dict(state_dict)
+    pretrained = {
+        k: v
+        for k, v in pretrained.items()
+        if (k in model_state_dict and v.size() == model_state_dict[k].size())
+    }
+    model_state_dict.update(pretrained)
+    net.load_state_dict(model_state_dict)
     bottleneck_net = get_bottleneck_builder(config.network)
 
     return net.to(device), bottleneck_net
