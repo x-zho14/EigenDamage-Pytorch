@@ -56,6 +56,8 @@ class MLPruner:
         self.model = self.model.eval()
         self.init_step()
         for batch_idx, (inputs, targets) in tqdm(enumerate(dataloader), total=len(dataloader)):
+            if batch_idx == 100:
+                break
             inputs, targets = inputs.to(device), targets.to(device)
             outputs = self.model(inputs)
             if fisher_type == 'true':
