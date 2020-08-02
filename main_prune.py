@@ -82,6 +82,7 @@ def init_network(config, logger, device):
     model_state_dict = net.state_dict()
     state_dict = checkpoint['net'] if checkpoint.get('net', None) is not None else checkpoint['state_dict']
     for k, v in state_dict.items():
+        print(k)
         if k not in model_state_dict or v.size() != model_state_dict[k].size():
             print("IGNORE:", k)
         else:
