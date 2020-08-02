@@ -136,7 +136,7 @@ class MLPruner:
             # mask2 = self.importances[m].abs().gt(cutoff).float().cuda()
             # weight_copy.mul_(mask2)
 
-            if new_masks[m].numel() == 0:
+            if int(torch.sum(new_masks[m])) == 0:
                 print("pruned all")
                 temp_thre = get_threshold(np.abs(imps.view(-1).data.cpu().numpy()).tolist(), 0.001)
                 print("0.001 thre", temp_thre)
