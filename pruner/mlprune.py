@@ -119,6 +119,13 @@ class MLPruner:
         new_masks = dict()
         if prev_masks is None:
             prev_masks = dict()
+
+        total = 0
+        for m in self.model.modules():
+            if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
+                total += m.weight.data.numel()
+        pruned = 0
+        pruned2 = 0
         for m in self.importances.keys():
             print(m, norms)
             imps = self.importances[m]
@@ -126,22 +133,24 @@ class MLPruner:
             print('Norm is: %s' % norms.get(m, 1))
             # import pdb; pdb.set_trace()
             new_masks[m] = np.where(np.abs(imps.data.cpu().numpy()/norms.get(m, 1.0)) <= cutoff, np.zeros(mask.shape), mask)
-        for m in new_masks.keys():
             new_masks[m] = torch.from_numpy(new_masks[m]).float().cuda().requires_grad_(False)
-            print(m.weight.data.size(), new_masks[m].size())
+            weight_copy = m.weight.data.clone()
+            m.weight.data.mul_(new_masks[m])
+            mask2 = self.importances[m].abs().gt(cutoff).float().cuda()
+            weight_copy.mul_(mask2)
+            pruned = pruned + mask2.numel() - torch.sum(mask2)
+            pruned2 = pruned2 + new_masks[m].numel() - torch.sum(new_masks[m])
+            print("pruned pruned2", pruned, pruned2)
+            if weight_copy.equal(m.weight.data):
+                print("correct")
+
+
+        for m in new_masks.keys():
+
             m.weight.data.mul_(new_masks[m])
 
-        # for m in self.importances.keys():
-        #     print(m)
-        #     weight_copy = m.weight.data.abs().clone()
-        #     mask = weight_copy.gt(thre).float().cuda()
-        #     pruned = pruned + mask.numel() - torch.sum(mask)
-        #     m.weight.data.mul_(mask)
-        #     if int(torch.sum(mask)) == 0:
-        #         zero_flag = True
-        #     print('layer index: {:d} \t total params: {:d} \t remaining params: {:d}'.
-        #             format(k, mask.numel(), int(torch.sum(mask))))
-        # print('Total conv params: {}, Pruned conv params: {}, Pruned ratio: {}'.format(total, pruned, pruned / total))total
+        print('Total conv params: {}, Pruned conv params: {}, Pruned ratio: {}'.format(total, pruned, pruned / total))
+
         return new_masks
 
     def compute_masks(self, dataloader, criterion, device, fisher_type, prune_ratio, normalize=False, prev_masks=None):
@@ -155,7 +164,6 @@ class MLPruner:
         self._get_unit_importance()
         print("5")
         new_masks = self._make_masks(prune_ratio, prev_masks, normalize)
-        print(new_masks)
         print("6")
         self._rm_hooks()
         print("7")
@@ -223,7 +231,6 @@ class MLPruner:
                 inputs, targets = inputs.to(device), targets.to(device)
                 outputs = self.model(inputs)
                 loss = criterion(outputs, targets)
-                self.writer.add_scalar('train_%d/loss' % self.iter, loss.item(), iterations)
                 iterations += 1
                 all_loss += loss.item()
                 loss.backward()
