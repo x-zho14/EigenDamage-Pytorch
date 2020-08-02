@@ -7,6 +7,7 @@ from tqdm import tqdm
 from utils.kfac_utils import ComputeCovA, ComputeCovG, fetch_mat_weights
 from utils.common_utils import try_contiguous, PresetLRScheduler
 from utils.network_utils import stablize_bn
+from utils.prune_utils import get_threshold
 import os
 
 class MLPruner:
@@ -131,10 +132,19 @@ class MLPruner:
             new_masks[m] = np.where(np.abs(imps.data.cpu().numpy()/norms.get(m, 1.0)) <= cutoff, np.zeros(mask.shape), mask)
             new_masks[m] = torch.from_numpy(new_masks[m]).float().cuda().requires_grad_(False)
             # weight_copy = m.weight.data.clone()
-            m.weight.data.mul_(new_masks[m])
+
             # mask2 = self.importances[m].abs().gt(cutoff).float().cuda()
             # weight_copy.mul_(mask2)
+
+            if new_masks[m].numel() == 0:
+                print("pruned all")
+                temp_thre = get_threshold(np.abs(imps.view(-1).data.cpu().numpy()).tolist(), 0.001)
+                print("0.001 thre", temp_thre)
+                new_masks[m] = np.where(np.abs(imps.data.cpu().numpy() / norms.get(m, 1.0)) <= temp_thre,np.zeros(mask.shape), mask)
+                new_masks[m] = torch.from_numpy(new_masks[m]).float().cuda().requires_grad_(False)
+
             pruned = pruned + new_masks[m].numel() - torch.sum(new_masks[m])
+            m.weight.data.mul_(new_masks[m])
             # pruned2 = pruned2 + new_masks[m].numel() - torch.sum(new_masks[m])
             # print("pruned pruned2", pruned, pruned2)
             # if weight_copy.equal(m.weight.data):
