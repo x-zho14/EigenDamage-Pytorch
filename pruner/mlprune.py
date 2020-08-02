@@ -5,7 +5,7 @@ import torch.nn as nn
 from collections import OrderedDict
 from tqdm import tqdm
 from utils.kfac_utils import ComputeCovA, ComputeCovG, fetch_mat_weights
-from utils.common_utils import try_contiguous
+from utils.common_utils import try_contiguous, PresetLRScheduler
 from utils.network_utils import stablize_bn
 
 class MLPruner:
@@ -78,6 +78,7 @@ class MLPruner:
         eps = 1e-20
         for idx, m in enumerate(self.modules):
             # m_aa, m_gg = normalize_factors(self.m_aa[m], self.m_gg[m])
+            print(idx, m)
             m_aa, m_gg = self.m_aa[m], self.m_gg[m]
             self.d_a[m], self.Q_a[m] = torch.symeig(m_aa + torch.diag(m_aa.new(m_aa.size(0)).fill_(1.0)), eigenvectors=True)
             self.d_g[m], self.Q_g[m] = torch.symeig(m_gg + torch.diag(m_gg.new(m_gg.size(0)).fill_(1.0)), eigenvectors=True)
@@ -105,13 +106,18 @@ class MLPruner:
 
     def _make_masks(self, ratio, prev_masks, normalize):
         all_weights, norms = self._fetch_weights_collections(prev_masks, normalize)
+        print(all_weights, norms)
+        print(all_weights.size(), norms.size())
         all_weights = sorted(all_weights)
+        print(all_weights)
         cuttoff_index = np.round(ratio * len(all_weights)).astype(int)
         cutoff = all_weights[cuttoff_index]
+        print(cutoff)
         new_masks = dict()
         if prev_masks is None:
             prev_masks = dict()
         for m in self.importances.keys():
+            print(m, norms)
             imps = self.importances[m]
             mask = prev_masks.get(m, np.ones(m.weight.shape))
             print('Norm is: %s' % norms.get(m, 1))
@@ -132,6 +138,7 @@ class MLPruner:
         self._get_unit_importance()
         print("5")
         new_masks = self._make_masks(prune_ratio, prev_masks, normalize)
+        print(new_masks)
         print("6")
         self._rm_hooks()
         print("7")
@@ -151,6 +158,7 @@ class MLPruner:
         assert self._inversed, 'Not inversed.'
         with torch.no_grad():
             for m in self.modules:
+                print(m)
                 w = fetch_mat_weights(m, False)  # output_dim * input_dim
                 # (Q_a ⊗ Q_g) vec(W) = Q_g.t() @ W @ Q_a
                 A_inv = self.Q_a[m] @ (torch.diag(1.0 / (self.d_a[m] + eps))) @ self.Q_a[m].t()
@@ -158,6 +166,7 @@ class MLPruner:
                 A_inv_diag = torch.diag(A_inv)
                 G_inv_diag = torch.diag(G_inv)
                 w_imp = w ** 2 / (G_inv_diag.unsqueeze(1) @ A_inv_diag.unsqueeze(0))
+                print(w_imp, w_imp.size())
                 if isinstance(m, nn.Linear) and m.bias is not None:
                     self.importances[m] = try_contiguous(w_imp[:, :-1])
                 elif isinstance(m, nn.Conv2d):
