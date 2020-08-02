@@ -56,8 +56,6 @@ class MLPruner:
         self.model = self.model.eval()
         self.init_step()
         for batch_idx, (inputs, targets) in tqdm(enumerate(dataloader), total=len(dataloader)):
-            if batch_idx == 100:
-                break
             inputs, targets = inputs.to(device), targets.to(device)
             outputs = self.model(inputs)
             if fisher_type == 'true':
@@ -109,13 +107,10 @@ class MLPruner:
     def _make_masks(self, ratio, prev_masks, normalize):
         all_weights, norms = self._fetch_weights_collections(prev_masks, normalize)
         # print(all_weights, norms)
-        print(len(all_weights), len(norms))
         all_weights = sorted(all_weights)
-        print(all_weights[0:100])
         # print(all_weights)
         cuttoff_index = np.round(ratio * len(all_weights)).astype(int)
         cutoff = all_weights[cuttoff_index]
-        print(cutoff)
         new_masks = dict()
         if prev_masks is None:
             prev_masks = dict()
@@ -127,27 +122,27 @@ class MLPruner:
         pruned = 0
         pruned2 = 0
         for m in self.importances.keys():
-            print(m, norms)
             imps = self.importances[m]
             mask = prev_masks.get(m, np.ones(m.weight.shape))
             print('Norm is: %s' % norms.get(m, 1))
             # import pdb; pdb.set_trace()
             new_masks[m] = np.where(np.abs(imps.data.cpu().numpy()/norms.get(m, 1.0)) <= cutoff, np.zeros(mask.shape), mask)
             new_masks[m] = torch.from_numpy(new_masks[m]).float().cuda().requires_grad_(False)
-            weight_copy = m.weight.data.clone()
+            # weight_copy = m.weight.data.clone()
             m.weight.data.mul_(new_masks[m])
-            mask2 = self.importances[m].abs().gt(cutoff).float().cuda()
-            weight_copy.mul_(mask2)
-            pruned = pruned + mask2.numel() - torch.sum(mask2)
-            pruned2 = pruned2 + new_masks[m].numel() - torch.sum(new_masks[m])
-            print("pruned pruned2", pruned, pruned2)
-            if weight_copy.equal(m.weight.data):
-                print("correct")
-
-
-        for m in new_masks.keys():
-
-            m.weight.data.mul_(new_masks[m])
+            # mask2 = self.importances[m].abs().gt(cutoff).float().cuda()
+            # weight_copy.mul_(mask2)
+            pruned = pruned + new_masks[m].numel() - torch.sum(new_masks[m])
+            # pruned2 = pruned2 + new_masks[m].numel() - torch.sum(new_masks[m])
+            # print("pruned pruned2", pruned, pruned2)
+            # if weight_copy.equal(m.weight.data):
+            #     print("correct")
+            print('layer index: {:s} \t total params: {:d} \t remaining params: {:d} \t remaining ratio: {:f}'.
+                format(m, new_masks[m].numel(), int(torch.sum(new_masks[m])), int(torch.sum(new_masks[m])) / new_masks[m].numel()))
+        #
+        # for m in new_masks.keys():
+        #
+        #     m.weight.data.mul_(new_masks[m])
 
         print('Total conv params: {}, Pruned conv params: {}, Pruned ratio: {}'.format(total, pruned, pruned / total))
 
