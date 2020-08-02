@@ -6,7 +6,7 @@ from collections import OrderedDict
 from tqdm import tqdm
 from utils.kfac_utils import ComputeCovA, ComputeCovG, fetch_mat_weights
 from utils.common_utils import try_contiguous
-
+from utils.network_utils import stablize_bn
 
 class MLPruner:
 
@@ -41,7 +41,7 @@ class MLPruner:
     def _prepare_model(self):
         count = 0
         print(self.model)
-        print("=> We keep following layers in OBDPruner. ")
+        print("=> We keep following layers in MLPruner. ")
         for module in self.model.modules():
             classname = module.__class__.__name__
             if classname in self.known_modules:
@@ -122,14 +122,21 @@ class MLPruner:
         return new_masks
 
     def compute_masks(self, dataloader, criterion, device, fisher_type, prune_ratio, normalize=False, prev_masks=None):
+        print("1")
         self._prepare_model()
+        print("2")
         self._compute_fisher(dataloader, criterion, device, fisher_type)
+        print("3")
         self._update_inv()  # eigen decomposition of fisher
-
+        print("4")
         self._get_unit_importance()
+        print("5")
         new_masks = self._make_masks(prune_ratio, prev_masks, normalize)
+        print("6")
         self._rm_hooks()
+        print("7")
         self._clear_buffer()
+        print("8")
         return new_masks
 
     def _rm_hooks(self):
@@ -165,3 +172,72 @@ class MLPruner:
     def _clear_buffer(self):
         self.Fisher = {}
         self.modules = []
+
+    def fine_tune_model(self, trainloader, testloader, criterion, optim, learning_rate, weight_decay, nepochs=10,
+                        device='cuda'):
+        self.model = self.model.train()
+        optimizer = optim.SGD(self.model.parameters(), lr=learning_rate, momentum=0.9, weight_decay=weight_decay)
+        # optimizer = optim.Adam(self.model.parameters(), weight_decay=5e-4)
+        lr_schedule = {0: learning_rate, int(nepochs * 0.5): learning_rate * 0.1,
+                       int(nepochs * 0.75): learning_rate * 0.01}
+        lr_scheduler = PresetLRScheduler(lr_schedule)
+        best_test_acc, best_test_loss = 0, 100
+        iterations = 0
+        for epoch in range(nepochs):
+            self.model = self.model.train()
+            correct = 0
+            total = 0
+            all_loss = 0
+            lr_scheduler(optimizer, epoch)
+            desc = ('[LR: %.5f] Loss: %.3f | Acc: %.3f%% (%d/%d)' % (
+                lr_scheduler.get_lr(optimizer), 0, 0, correct, total))
+            prog_bar = tqdm(enumerate(trainloader), total=len(trainloader), desc=desc, leave=True)
+            for batch_idx, (inputs, targets) in prog_bar:
+                optimizer.zero_grad()
+                inputs, targets = inputs.to(device), targets.to(device)
+                outputs = self.model(inputs)
+                loss = criterion(outputs, targets)
+                self.writer.add_scalar('train_%d/loss' % self.iter, loss.item(), iterations)
+                iterations += 1
+                all_loss += loss.item()
+                loss.backward()
+                optimizer.step()
+                _, predicted = outputs.max(1)
+                total += targets.size(0)
+                correct += predicted.eq(targets).sum().item()
+                desc = ('[%d][LR: %.5f, WD: %.5f] Loss: %.3f | Acc: %.3f%% (%d/%d)' %
+                        (epoch, lr_scheduler.get_lr(optimizer), weight_decay, all_loss / (batch_idx + 1),
+                         100. * correct / total, correct, total))
+                prog_bar.set_description(desc, refresh=True)
+            test_loss, test_acc = self.test_model(testloader, criterion, device)
+            best_test_loss = best_test_loss if best_test_acc > test_acc else test_loss
+            best_test_acc = max(test_acc, best_test_acc)
+        print('** Finetuning finished. Stabilizing batch norm and test again!')
+        stablize_bn(self.model, trainloader)
+        test_loss, test_acc = self.test_model(testloader, criterion, device)
+        best_test_loss = best_test_loss if best_test_acc > test_acc else test_loss
+        best_test_acc = max(test_acc, best_test_acc)
+        return best_test_loss, best_test_acc
+
+    def test_model(self, dataloader, criterion, device='cuda'):
+        self.model = self.model.eval()
+        correct = 0
+        total = 0
+        all_loss = 0
+        desc = ('Loss: %.3f | Acc: %.3f%% (%d/%d)' % (0, 0, correct, total))
+        prog_bar = tqdm(enumerate(dataloader), total=len(dataloader), desc=desc, leave=True)
+        for batch_idx, (inputs, targets) in prog_bar:
+            inputs, targets = inputs.to(device), targets.to(device)
+            #try:
+            outputs = self.model(inputs)
+            #except:
+            #    import pdb; pdb.set_trace()
+            loss = criterion(outputs, targets)
+            all_loss += loss.item()
+            _, predicted = outputs.max(1)
+            total += targets.size(0)
+            correct += predicted.eq(targets).sum().item()
+            desc = ('Loss: %.3f | Acc: %.3f%% (%d/%d)' %
+                    (all_loss / (batch_idx + 1), 100. * correct / total, correct, total))
+            prog_bar.set_description(desc, refresh=True)
+        return all_loss / (batch_idx + 1), 100. * correct / total
