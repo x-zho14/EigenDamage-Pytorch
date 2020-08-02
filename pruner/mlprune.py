@@ -109,7 +109,7 @@ class MLPruner:
     def _make_masks(self, ratio, prev_masks, normalize):
         all_weights, norms = self._fetch_weights_collections(prev_masks, normalize)
         print(all_weights, norms)
-        print(all_weights.size(), norms.size())
+        print(len(all_weights), len(norms))
         all_weights = sorted(all_weights)
         print(all_weights)
         cuttoff_index = np.round(ratio * len(all_weights)).astype(int)
@@ -122,11 +122,25 @@ class MLPruner:
             print(m, norms)
             imps = self.importances[m]
             mask = prev_masks.get(m, np.ones(m.weight.shape))
+            print(mask)
             print('Norm is: %s' % norms.get(m, 1))
             # import pdb; pdb.set_trace()
             new_masks[m] = np.where(np.abs(imps.data.cpu().numpy()/norms.get(m, 1.0)) <= cutoff, np.zeros(mask.shape), mask)
         for m in new_masks.keys():
             new_masks[m] = torch.from_numpy(new_masks[m]).float().cuda().requires_grad_(False)
+            m.weight.data.mul_(new_masks[m])
+
+        # for m in self.importances.keys():
+        #     print(m)
+        #     weight_copy = m.weight.data.abs().clone()
+        #     mask = weight_copy.gt(thre).float().cuda()
+        #     pruned = pruned + mask.numel() - torch.sum(mask)
+        #     m.weight.data.mul_(mask)
+        #     if int(torch.sum(mask)) == 0:
+        #         zero_flag = True
+        #     print('layer index: {:d} \t total params: {:d} \t remaining params: {:d}'.
+        #             format(k, mask.numel(), int(torch.sum(mask))))
+        # print('Total conv params: {}, Pruned conv params: {}, Pruned ratio: {}'.format(total, pruned, pruned / total))total
         return new_masks
 
     def compute_masks(self, dataloader, criterion, device, fisher_type, prune_ratio, normalize=False, prev_masks=None):
