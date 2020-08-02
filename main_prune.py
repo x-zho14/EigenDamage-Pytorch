@@ -105,7 +105,7 @@ def init_pruner(net, bottleneck_net, config, writer, logger):
                                 writer,
                                 logger,
                                 config.prune_ratio_limit,
-                                '%s%d'%(config.network, config.depth),
+                                '%s%d' % (config.network, config.depth),
                                 batch_averaged=True,
                                 use_patch=False,
                                 fix_layers=0)
@@ -129,7 +129,7 @@ def init_pruner(net, bottleneck_net, config, writer, logger):
                                  writer,
                                  logger,
                                  config.prune_ratio_limit,
-                                 '%s%d'%(config.network, config.depth),
+                                 '%s%d' % (config.network, config.depth),
                                  batch_averaged=True,
                                  use_patch=False,
                                  fix_layers=0)
@@ -140,7 +140,7 @@ def init_pruner(net, bottleneck_net, config, writer, logger):
                                  writer,
                                  logger,
                                  config.prune_ratio_limit,
-                                 '%s%d'%(config.network, config.depth),
+                                 '%s%d' % (config.network, config.depth),
                                  batch_averaged=True,
                                  use_patch=False,
                                  fix_layers=0)
@@ -161,7 +161,7 @@ def init_summary_writer(config):
     path_model = os.path.join(path, 'models/%s.py' % config.network)
     path_main = os.path.join(path, 'main_prune.py')
     path_pruner = os.path.join(path, 'pruner/%s.py' % config.pruner)
-    logger = get_logger('log', logpath=config.summary_dir+'/',
+    logger = get_logger('log', logpath=config.summary_dir + '/',
                         filepath=path_model, package_files=[path_main, path_pruner])
     logger.info(dict(config))
     writer = SummaryWriter(config.summary_dir)
@@ -189,14 +189,14 @@ def save_model(config, iteration, pruner, cfg, stat):
 def compute_ratio(model, total, fix_rotation, logger):
     indicator = 1 if fix_rotation else 0
     rotation_numel = count_rotation_numels(model)
-    pruned_numel = count_parameters(model) + rotation_numel*indicator
+    pruned_numel = count_parameters(model) + rotation_numel * indicator
     ratio = 100. * pruned_numel / total
     logger.info('Compression ratio: %.2f%%(%d/%d), Total: %d, Rotation: %d.' % (ratio,
                                                                                 pruned_numel,
                                                                                 total,
                                                                                 pruned_numel,
                                                                                 rotation_numel))
-    unfair_ratio = 100 - 100. * (pruned_numel - rotation_numel*indicator)
+    unfair_ratio = 100 - 100. * (pruned_numel - rotation_numel * indicator)
     return 100 - ratio, unfair_ratio, pruned_numel, rotation_numel
 
 
@@ -221,7 +221,7 @@ def main(config):
     fisher_mode = config.fisher_mode  # eigen|full|diagonal
     normalize = config.normalize
     prune_mode = config.prune_mode  # one-pass | iterative
-    fix_rotation = config.get('fix_rotation', True) 
+    fix_rotation = config.get('fix_rotation', True)
 
     assert (len(epochs) == len(learning_rates) and
             len(learning_rates) == len(weight_decays) and
@@ -233,7 +233,7 @@ def main(config):
         lr = learning_rates[it]
         wd = weight_decays[it]
         ratio = ratios[it]
-        logger.info('-'*120)
+        logger.info('-' * 120)
         logger.info('** [%d], Ratio: %.2f, epoch: %d, lr: %.4f, wd: %.4f' % (it, ratio, epoch, lr, wd))
         logger.info('Reinit: %s, Fisher_mode: %s, fisher_type: %s, normalize: %s, fix_rotation: %s.' % (config.re_init,
                                                                                                         fisher_mode,
@@ -243,13 +243,12 @@ def main(config):
         pruner.fix_rotation = fix_rotation
 
         # conduct pruning
-        cfg = pruner.make_pruned_model(trainloader,
-                                       criterion=criterion,
-                                       device=device,
-                                       fisher_type=fisher_type,
-                                       prune_ratio=ratio,
-                                       normalize=normalize,
-                                       re_init=config.re_init)
+        if config.fisher_mode != "mlpruner":
+            cfg = pruner.make_pruned_model(trainloader, criterion=criterion, device=device, fisher_type=fisher_type,
+                                           prune_ratio=ratio, normalize=normalize, re_init=config.re_init)
+        else:
+            cfg = pruner.compute_masks(trainloader, criterion=criterion, device=device, fisher_type=fisher_type,
+                                       prune_ratio=ratio, normalize=normalize)
 
         # for tracking the best accuracy
         compression_ratio, unfair_ratio, all_numel, rotation_numel = compute_ratio(pruner.model, total_parameters,
