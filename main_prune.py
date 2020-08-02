@@ -243,7 +243,7 @@ def main(config):
         pruner.fix_rotation = fix_rotation
 
         # conduct pruning
-        if config.fisher_mode != "mlpruner":
+        if config.fisher_mode != "mlprune":
             cfg = pruner.make_pruned_model(trainloader, criterion=criterion, device=device, fisher_type=fisher_type,
                                            prune_ratio=ratio, normalize=normalize, re_init=config.re_init)
         else:
