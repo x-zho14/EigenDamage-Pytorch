@@ -111,6 +111,7 @@ class MLPruner:
         # print(all_weights, norms)
         print(len(all_weights), len(norms))
         all_weights = sorted(all_weights)
+        print(all_weights[0:100])
         # print(all_weights)
         cuttoff_index = np.round(ratio * len(all_weights)).astype(int)
         cutoff = all_weights[cuttoff_index]
@@ -122,7 +123,6 @@ class MLPruner:
             print(m, norms)
             imps = self.importances[m]
             mask = prev_masks.get(m, np.ones(m.weight.shape))
-            print(mask)
             print('Norm is: %s' % norms.get(m, 1))
             # import pdb; pdb.set_trace()
             new_masks[m] = np.where(np.abs(imps.data.cpu().numpy()/norms.get(m, 1.0)) <= cutoff, np.zeros(mask.shape), mask)
