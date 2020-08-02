@@ -60,7 +60,7 @@ def init_config():
 def init_dataloader(config):
     trainloader, testloader = get_dataloader(dataset=config.dataset,
                                              train_batch_size=config.batch_size,
-                                             test_batch_size=256)
+                                             test_batch_size=100)
     return trainloader, testloader
 
 
@@ -79,7 +79,13 @@ def init_network(config, logger, device):
         logger.info('** [%s-%s%d] Acc: %.2f%%, Epoch: %d, Loss: %.4f' % (args.dataset, args.network, args.depth,
                                                                          checkpoint['acc'], checkpoint['epoch'],
                                                                          checkpoint['loss']))
+    model_state_dict = net.state_dict()
     state_dict = checkpoint['net'] if checkpoint.get('net', None) is not None else checkpoint['state_dict']
+    for k, v in state_dict.items():
+        if k not in model_state_dict or v.size() != model_state_dict[k].size():
+            print("IGNORE:", k)
+        else:
+            print("LOAD:", k)
     net.load_state_dict(state_dict)
     bottleneck_net = get_bottleneck_builder(config.network)
 
@@ -145,7 +151,7 @@ def init_pruner(net, bottleneck_net, config, writer, logger):
                                  use_patch=False,
                                  fix_layers=0)
     elif config.fisher_mode == 'mlprune':
-        pruner = MLPruner(net)
+        pruner = MLPruner(net, config)
     else:
         raise NotImplementedError
 
@@ -203,13 +209,15 @@ def compute_ratio(model, total, fix_rotation, logger):
 def main(config):
     stats = {}
     device = 'cuda'
-    criterion = torch.nn.CrossEntropyLoss()
+    criterion = torch.nn.CrossEntropyLoss().cuda()
+
 
     # config = init_config() if config is None else config
     logger, writer = init_summary_writer(config)
     trainloader, testloader = init_dataloader(config)
     net, bottleneck_net = init_network(config, logger, device)
     pruner = init_pruner(net, bottleneck_net, config, writer, logger)
+    pruner.test_model(testloader, criterion, device)
 
     # start pruning
     epochs = str_to_list(config.epoch, ',', int)
@@ -249,54 +257,54 @@ def main(config):
         else:
             cfg = pruner.compute_masks(trainloader, criterion=criterion, device=device, fisher_type=fisher_type,
                                        prune_ratio=ratio, normalize=normalize)
-
-        # for tracking the best accuracy
-        compression_ratio, unfair_ratio, all_numel, rotation_numel = compute_ratio(pruner.model, total_parameters,
-                                                                                   fix_rotation, logger)
-        if config.dataset == 'tiny_imagenet':
-            total_flops, rotation_flops = print_model_param_flops(pruner.model, 64, cuda=True)
-        else:
-            total_flops, rotation_flops = print_model_param_flops(pruner.model, 32, cuda=True)
-        train_loss_pruned, train_acc_pruned = pruner.test_model(trainloader, criterion, device)
-        test_loss_pruned, test_acc_pruned = pruner.test_model(testloader, criterion, device)
-
-        # write results
-        logger.info('Before: Accuracy: %.2f%%(train), %.2f%%(test).' % (train_acc_pruned, test_acc_pruned))
-        logger.info('        Loss:     %.2f  (train), %.2f  (test).' % (train_loss_pruned, test_loss_pruned))
-
-        test_loss_finetuned, test_acc_finetuned = pruner.fine_tune_model(trainloader=trainloader,
-                                                                         testloader=testloader,
-                                                                         criterion=criterion,
-                                                                         optim=optim,
-                                                                         learning_rate=lr,
-                                                                         weight_decay=wd,
-                                                                         nepochs=epoch)
-        train_loss_finetuned, train_acc_finetuned = pruner.test_model(trainloader, criterion, device)
-        logger.info('After:  Accuracy: %.2f%%(train), %.2f%%(test).' % (train_acc_finetuned, test_acc_finetuned))
-        logger.info('        Loss:     %.2f  (train), %.2f  (test).' % (train_loss_finetuned, test_loss_finetuned))
-        # save model
-
-        stat = {
-            'total_flops': total_flops,
-            'rotation_flops': rotation_flops,
-            'it': it,
-            'prune_ratio': ratio,
-            'cr': compression_ratio,
-            'unfair_cr': unfair_ratio,
-            'all_params': all_numel,
-            'rotation_params': rotation_numel,
-            'prune/train_loss': train_loss_pruned,
-            'prune/train_acc': train_acc_pruned,
-            'prune/test_loss': test_loss_pruned,
-            'prune/test_acc': test_acc_pruned,
-            'finetune/train_loss': train_loss_finetuned,
-            'finetune/test_loss': test_loss_finetuned,
-            'finetune/train_acc': train_acc_finetuned,
-            'finetune/test_acc': test_acc_finetuned
-        }
-        save_model(config, it, pruner, cfg, stat)
-
-        stats[it] = stat
+        # 
+        # # for tracking the best accuracy
+        # compression_ratio, unfair_ratio, all_numel, rotation_numel = compute_ratio(pruner.model, total_parameters,
+        #                                                                            fix_rotation, logger)
+        # if config.dataset == 'tiny_imagenet':
+        #     total_flops, rotation_flops = print_model_param_flops(pruner.model, 64, cuda=True)
+        # else:
+        #     total_flops, rotation_flops = print_model_param_flops(pruner.model, 32, cuda=True)
+        # train_loss_pruned, train_acc_pruned = pruner.test_model(trainloader, criterion, device)
+        # test_loss_pruned, test_acc_pruned = pruner.test_model(testloader, criterion, device)
+        # 
+        # # write results
+        # logger.info('Before: Accuracy: %.2f%%(train), %.2f%%(test).' % (train_acc_pruned, test_acc_pruned))
+        # logger.info('        Loss:     %.2f  (train), %.2f  (test).' % (train_loss_pruned, test_loss_pruned))
+        # 
+        # test_loss_finetuned, test_acc_finetuned = pruner.fine_tune_model(trainloader=trainloader,
+        #                                                                  testloader=testloader,
+        #                                                                  criterion=criterion,
+        #                                                                  optim=optim,
+        #                                                                  learning_rate=lr,
+        #                                                                  weight_decay=wd,
+        #                                                                  nepochs=epoch)
+        # train_loss_finetuned, train_acc_finetuned = pruner.test_model(trainloader, criterion, device)
+        # logger.info('After:  Accuracy: %.2f%%(train), %.2f%%(test).' % (train_acc_finetuned, test_acc_finetuned))
+        # logger.info('        Loss:     %.2f  (train), %.2f  (test).' % (train_loss_finetuned, test_loss_finetuned))
+        # # save model
+        # 
+        # stat = {
+        #     'total_flops': total_flops,
+        #     'rotation_flops': rotation_flops,
+        #     'it': it,
+        #     'prune_ratio': ratio,
+        #     'cr': compression_ratio,
+        #     'unfair_cr': unfair_ratio,
+        #     'all_params': all_numel,
+        #     'rotation_params': rotation_numel,
+        #     'prune/train_loss': train_loss_pruned,
+        #     'prune/train_acc': train_acc_pruned,
+        #     'prune/test_loss': test_loss_pruned,
+        #     'prune/test_acc': test_acc_pruned,
+        #     'finetune/train_loss': train_loss_finetuned,
+        #     'finetune/test_loss': test_loss_finetuned,
+        #     'finetune/train_acc': train_acc_finetuned,
+        #     'finetune/test_acc': test_acc_finetuned
+        # }
+        # save_model(config, it, pruner, cfg, stat)
+        # 
+        # stats[it] = stat
 
         if prune_mode == 'one_pass':
             del net
@@ -304,8 +312,8 @@ def main(config):
             net, bottleneck_net = init_network(config, logger, device)
             pruner = init_pruner(net, bottleneck_net, config, writer, logger)
             pruner.iter = it
-        with open(os.path.join(config.summary_dir, 'stats.json'), 'w') as f:
-            json.dump(stats, f)
+        # with open(os.path.join(config.summary_dir, 'stats.json'), 'w') as f:
+        #     json.dump(stats, f)
 
 
 if __name__ == '__main__':

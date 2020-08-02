@@ -8,6 +8,12 @@ def get_network(network, depth, dataset):
         return resnet(depth=depth, dataset=dataset)
     elif network == 'presnet':
         return presnet(depth=depth, dataset=dataset)
+    elif network == 'resnet32':
+        if dataset == "cifar10":
+            num_classes = 10
+        else:
+            num_classes = 100
+        return resnet32(num_classes)
     else:
         raise NotImplementedError
 

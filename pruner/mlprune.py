@@ -7,12 +7,14 @@ from tqdm import tqdm
 from utils.kfac_utils import ComputeCovA, ComputeCovG, fetch_mat_weights
 from utils.common_utils import try_contiguous, PresetLRScheduler
 from utils.network_utils import stablize_bn
+import os
 
 class MLPruner:
 
-    def __init__(self, model):
+    def __init__(self, model, config):
         self.known_modules = {'Linear', 'Conv2d'}
         # self.MatGradHandler = ComputeMatGrad()
+        self.config = config
         self.CovAHandler = ComputeCovA()
         self.CovGHandler = ComputeCovG()
         self.model = model
@@ -145,7 +147,14 @@ class MLPruner:
         #     m.weight.data.mul_(new_masks[m])
 
         print('Total conv params: {}, Pruned conv params: {}, Pruned ratio: {}'.format(total, pruned, pruned / total))
-
+        state = {
+            'epoch': 0,
+            'state_dict': self.model.state_dict(),
+            'acc': 0,
+            'best_acc': 0.,
+        }
+        filepath = os.path.join(self.config.network + self.config.dataset + str(ratio), 'pruned.pth.tar')
+        torch.save(state, filepath)
         return new_masks
 
     def compute_masks(self, dataloader, criterion, device, fisher_type, prune_ratio, normalize=False, prev_masks=None):

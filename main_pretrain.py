@@ -38,7 +38,7 @@ net = net.to(args.device)
 # init dataloader
 trainloader, testloader = get_dataloader(dataset=args.dataset,
                                          train_batch_size=args.batch_size,
-                                         test_batch_size=256)
+                                         test_batch_size=100)
 
 # init optimizer and lr scheduler
 optimizer = optim.SGD(net.parameters(), lr=args.learning_rate, momentum=0.9, weight_decay=args.weight_decay)
