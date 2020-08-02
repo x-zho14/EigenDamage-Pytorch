@@ -140,7 +140,7 @@ class MLPruner:
             # if weight_copy.equal(m.weight.data):
             #     print("correct")
             print('layer index: {:s} \t total params: {:d} \t remaining params: {:d} \t remaining ratio: {:f}'.
-                format(m, new_masks[m].numel(), int(torch.sum(new_masks[m])), int(torch.sum(new_masks[m])) / new_masks[m].numel()))
+                format(str(m), new_masks[m].numel(), int(torch.sum(new_masks[m])), int(torch.sum(new_masks[m])) / new_masks[m].numel()))
         #
         # for m in new_masks.keys():
         #
@@ -195,7 +195,6 @@ class MLPruner:
                 A_inv_diag = torch.diag(A_inv)
                 G_inv_diag = torch.diag(G_inv)
                 w_imp = w ** 2 / (G_inv_diag.unsqueeze(1) @ A_inv_diag.unsqueeze(0))
-                print(w_imp, w_imp.size())
                 if isinstance(m, nn.Linear) and m.bias is not None:
                     self.importances[m] = try_contiguous(w_imp[:, :-1])
                 elif isinstance(m, nn.Conv2d):
