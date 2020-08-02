@@ -34,6 +34,7 @@ class BasicBlock(nn.Module):
 
 class ResNet(nn.Module):
     def __init__(self, block, num_blocks, num_classes):
+        print("init by resnet32")
         super(ResNet, self).__init__()
         _outputs = [32, 64, 128]
         self.in_planes = _outputs[0]

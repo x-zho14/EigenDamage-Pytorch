@@ -9,6 +9,7 @@ def get_network(network, depth, dataset):
     elif network == 'presnet':
         return presnet(depth=depth, dataset=dataset)
     elif network == 'resnet32':
+        print("init by resnet32")
         if dataset == "cifar10":
             num_classes = 10
         else:
