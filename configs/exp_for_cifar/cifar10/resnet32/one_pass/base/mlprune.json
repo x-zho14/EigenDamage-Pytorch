@@ -14,6 +14,6 @@
   "pruner": "mlprune",
   "normalize": false,
   "prune_mode": "one_pass",
-  "fix_rotation": false,
+  "fix_rotation": false
 }
 
