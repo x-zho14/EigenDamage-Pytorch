@@ -70,7 +70,7 @@ def init_network(config, logger, device):
                       dataset=config.dataset)
     print('==> Loading checkpoint from %s.' % config.checkpoint)
     logger.info('==> Loading checkpoint from %s.' % config.checkpoint)
-    checkpoint = torch.load(config.checkpoint)
+    checkpoint = torch.load(config.checkpoint, map_location=torch.device("cuda:0"))
     if checkpoint.get('args', None) is not None:
         args = checkpoint['args']
         print('** [%s-%s%d] Acc: %.2f%%, Epoch: %d, Loss: %.4f' % (args.dataset, args.network, args.depth,
