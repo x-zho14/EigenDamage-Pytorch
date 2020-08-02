@@ -108,10 +108,10 @@ class MLPruner:
 
     def _make_masks(self, ratio, prev_masks, normalize):
         all_weights, norms = self._fetch_weights_collections(prev_masks, normalize)
-        print(all_weights, norms)
+        # print(all_weights, norms)
         print(len(all_weights), len(norms))
         all_weights = sorted(all_weights)
-        print(all_weights)
+        # print(all_weights)
         cuttoff_index = np.round(ratio * len(all_weights)).astype(int)
         cutoff = all_weights[cuttoff_index]
         print(cutoff)
@@ -128,6 +128,7 @@ class MLPruner:
             new_masks[m] = np.where(np.abs(imps.data.cpu().numpy()/norms.get(m, 1.0)) <= cutoff, np.zeros(mask.shape), mask)
         for m in new_masks.keys():
             new_masks[m] = torch.from_numpy(new_masks[m]).float().cuda().requires_grad_(False)
+            print(m.weight.data.size(), new_masks[m].size())
             m.weight.data.mul_(new_masks[m])
 
         # for m in self.importances.keys():
