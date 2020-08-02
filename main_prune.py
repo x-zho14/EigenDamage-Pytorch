@@ -11,6 +11,7 @@ from pruner.kfac_eigen_pruner import KFACEigenPruner
 from pruner.kfac_full_pruner import KFACFullPruner
 from pruner.kfac_OBD_F2 import KFACOBDF2Pruner
 from pruner.kfac_OBS_F2 import KFACOBSF2Pruner
+from pruner.mlprune import MLPruner
 
 from tensorboardX import SummaryWriter
 from utils.common_utils import (get_config_from_json,
@@ -143,6 +144,8 @@ def init_pruner(net, bottleneck_net, config, writer, logger):
                                  batch_averaged=True,
                                  use_patch=False,
                                  fix_layers=0)
+    elif config.fisher_mode == 'mlprune':
+        pruner = MLPruner(net)
     else:
         raise NotImplementedError
 
