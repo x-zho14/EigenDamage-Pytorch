@@ -278,23 +278,23 @@ def main(config):
         #     total_flops, rotation_flops = print_model_param_flops(pruner.model, 64, cuda=True)
         # else:
         #     total_flops, rotation_flops = print_model_param_flops(pruner.model, 32, cuda=True)
-        train_loss_pruned, train_acc_pruned = pruner.test_model(trainloader, criterion, device)
+        #train_loss_pruned, train_acc_pruned = pruner.test_model(trainloader, criterion, device)
         test_loss_pruned, test_acc_pruned = pruner.test_model(testloader, criterion, device)
 
         # write results
         logger.info('Before: Accuracy: %.2f%%(train), %.2f%%(test).' % (train_acc_pruned, test_acc_pruned))
-        logger.info('        Loss:     %.2f  (train), %.2f  (test).' % (train_loss_pruned, test_loss_pruned))
+        # logger.info('        Loss:     %.2f  (train), %.2f  (test).' % (train_loss_pruned, test_loss_pruned))
 
-        test_loss_finetuned, test_acc_finetuned = pruner.fine_tune_model(trainloader=trainloader,
-                                                                         testloader=testloader,
-                                                                         criterion=criterion,
-                                                                         optim=optim,
-                                                                         learning_rate=lr,
-                                                                         weight_decay=wd,
-                                                                         nepochs=epoch)
-        train_loss_finetuned, train_acc_finetuned = pruner.test_model(trainloader, criterion, device)
-        logger.info('After:  Accuracy: %.2f%%(train), %.2f%%(test).' % (train_acc_finetuned, test_acc_finetuned))
-        logger.info('        Loss:     %.2f  (train), %.2f  (test).' % (train_loss_finetuned, test_loss_finetuned))
+        # test_loss_finetuned, test_acc_finetuned = pruner.fine_tune_model(trainloader=trainloader,
+        #                                                                  testloader=testloader,
+        #                                                                  criterion=criterion,
+        #                                                                  optim=optim,
+        #                                                                  learning_rate=lr,
+        #                                                                  weight_decay=wd,
+        #                                                                  nepochs=epoch)
+        # train_loss_finetuned, train_acc_finetuned = pruner.test_model(trainloader, criterion, device)
+        # logger.info('After:  Accuracy: %.2f%%(train), %.2f%%(test).' % (train_acc_finetuned, test_acc_finetuned))
+        # logger.info('        Loss:     %.2f  (train), %.2f  (test).' % (train_loss_finetuned, test_loss_finetuned))
         # # save model
         # 
         # stat = {
