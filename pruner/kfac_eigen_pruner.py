@@ -329,7 +329,10 @@ class KFACEigenPruner:
         best_test_acc, best_test_loss = 0, 100
         iterations = 0
         for epoch in range(nepochs):
-            self.model = self.model.train()
+            for m in self.model.modules():
+                if isinstance(m, nn.Conv2d):
+                    print(m, torch.sum(m.weight.data.eq(0)), m.weight.nelement(), 1-(float(torch.sum(m.weight.data.eq(0)))/float(m.weight.nelement())))
+            self.model = self.model.train()-
             correct = 0
             total = 0
             all_loss = 0
