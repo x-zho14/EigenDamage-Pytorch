@@ -106,7 +106,7 @@ def vgg19(**kwargs):
     return model
 
 
-def vgg19_bn(**kwargs):
+def vgg19_bn(num_classes):
     """VGG 19-layer model (configuration 'E') with batch normalization"""
-    model = VGG(make_layers(cfg['E'], batch_norm=True), **kwargs)
+    model = VGG(make_layers(cfg['E'], batch_norm=True), num_classes=num_classes)
     return model
