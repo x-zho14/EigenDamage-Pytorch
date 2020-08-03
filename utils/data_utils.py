@@ -3,34 +3,60 @@ import torchvision
 import torchvision.transforms as transforms
 
 
-def get_transforms(dataset):
+def get_transforms(dataset, network):
     transform_train = None
     transform_test = None
     if dataset == 'cifar10':
-        transform_train = transforms.Compose([
-            transforms.RandomCrop(32, padding=4),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-        ])
+        if network == "vgg19" or network == "resnet32":
+            transform_train = transforms.Compose([
+                transforms.RandomCrop(32, padding=4),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.491, 0.482, 0.447], std=[0.247, 0.243, 0.262]),
+            ])
 
-        transform_test = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-        ])
+            transform_test = transforms.Compose([
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.491, 0.482, 0.447], std=[0.247, 0.243, 0.262]),
+            ])
+        else:
+            transform_train = transforms.Compose([
+                transforms.RandomCrop(32, padding=4),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+            ])
+
+            transform_test = transforms.Compose([
+                transforms.ToTensor(),
+                transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+            ])
 
     if dataset == 'cifar100':
-        transform_train = transforms.Compose([
-            transforms.RandomCrop(32, padding=4),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize((0.5071, 0.4867, 0.4408), (0.2675, 0.2565, 0.2761)),
-        ])
+        if network == "vgg19" or network == "resnet32":
+            transform_train = transforms.Compose([
+                transforms.RandomCrop(32, padding=4),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.491, 0.482, 0.447], std=[0.247, 0.243, 0.262]),
+            ])
 
-        transform_test = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize((0.5071, 0.4867, 0.4408), (0.2675, 0.2565, 0.2761)),
-        ])
+            transform_test = transforms.Compose([
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.491, 0.482, 0.447], std=[0.247, 0.243, 0.262]),
+            ])
+        else:
+            transform_train = transforms.Compose([
+                transforms.RandomCrop(32, padding=4),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                transforms.Normalize((0.5071, 0.4867, 0.4408), (0.2675, 0.2565, 0.2761)),
+            ])
+
+            transform_test = transforms.Compose([
+                transforms.ToTensor(),
+                transforms.Normalize((0.5071, 0.4867, 0.4408), (0.2675, 0.2565, 0.2761)),
+            ])
 
     if dataset == 'cinic-10':
         # cinic_directory = '/path/to/cinic/directory'
@@ -63,8 +89,8 @@ def get_transforms(dataset):
     return transform_train, transform_test
 
 
-def get_dataloader(dataset, train_batch_size, test_batch_size, num_workers=2, root='../data'):
-    transform_train, transform_test = get_transforms(dataset)
+def get_dataloader(dataset, train_batch_size, test_batch_size, num_workers=2, root='../data', network="vgg"):
+    transform_train, transform_test = get_transforms(dataset, network)
     trainset, testset = None, None
     if dataset == 'cifar10':
         trainset = torchvision.datasets.CIFAR10(root=root, train=True, download=True, transform=transform_train)

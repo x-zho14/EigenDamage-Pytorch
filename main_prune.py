@@ -60,7 +60,7 @@ def init_config():
 def init_dataloader(config):
     trainloader, testloader = get_dataloader(dataset=config.dataset,
                                              train_batch_size=config.batch_size,
-                                             test_batch_size=100)
+                                             test_batch_size=100, network = config.network)
     return trainloader, testloader
 
 
