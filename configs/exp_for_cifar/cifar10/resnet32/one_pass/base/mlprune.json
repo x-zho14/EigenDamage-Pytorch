@@ -12,7 +12,7 @@
   "fisher_type": "true",
   "checkpoint": "checkpoint/pretrain/cifar10_resnet32_best.t7",
   "pruner": "mlprune",
-  "normalize": false,
+  "normalize": true,
   "prune_mode": "one_pass",
   "fix_rotation": false,
   "re_init": false
