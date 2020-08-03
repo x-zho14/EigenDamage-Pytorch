@@ -246,6 +246,11 @@ class MLPruner:
                 iterations += 1
                 all_loss += loss.item()
                 loss.backward()
+                for k, m in enumerate(self.model.modules()):
+                    if isinstance(m, torch.nn.Conv2d):
+                        weight_copy = m.weight.data.abs().clone()
+                        mask = weight_copy.gt(0).float().cuda()
+                        m.weight.grad.data.mul_(mask)
                 optimizer.step()
                 _, predicted = outputs.max(1)
                 total += targets.size(0)
