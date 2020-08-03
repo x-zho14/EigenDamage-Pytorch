@@ -68,7 +68,7 @@ def init_network(config, logger, device):
     net = get_network(network=config.network,
                       depth=config.depth,
                       dataset=config.dataset)
-    if config.network == "resnet32":
+    if config.network == "resnet32" or config.network == "vgg19":
         net = torch.nn.DataParallel(net).cuda()
     print('==> Loading checkpoint from %s.' % config.checkpoint)
     logger.info('==> Loading checkpoint from %s.' % config.checkpoint)

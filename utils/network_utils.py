@@ -15,6 +15,13 @@ def get_network(network, depth, dataset):
         else:
             num_classes = 100
         return resnet32(num_classes)
+    elif network == 'vgg19':
+        print("init by vgg19")
+        if dataset == "cifar10":
+            num_classes = 10
+        else:
+            num_classes = 100
+        return vgg19_bn(num_classes)
     else:
         raise NotImplementedError
 
