@@ -282,7 +282,7 @@ def main(config):
         test_loss_pruned, test_acc_pruned = pruner.test_model(testloader, criterion, device)
 
         # write results
-        logger.info('Before: Accuracy: %.2f%%(train), %.2f%%(test).' % (train_acc_pruned, test_acc_pruned))
+        logger.info('Before: Accuracy: %.2f%%(test).' % test_acc_pruned)
         # logger.info('        Loss:     %.2f  (train), %.2f  (test).' % (train_loss_pruned, test_loss_pruned))
 
         # test_loss_finetuned, test_acc_finetuned = pruner.fine_tune_model(trainloader=trainloader,
