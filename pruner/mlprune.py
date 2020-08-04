@@ -163,7 +163,7 @@ class MLPruner:
             'acc': 0,
             'best_acc': 0.,
         }
-        torch.save(state, self.config.network + self.config.dataset + str(ratio) + 'pruned.pth.tar')
+        torch.save(state, self.config.network +"_" +self.config.dataset +"_"+ str(ratio) +"_"+str(self.config.batch_size)+ 'pruned.pth.tar')
         return new_masks
 
     def compute_masks(self, dataloader, criterion, device, fisher_type, prune_ratio, normalize=False, prev_masks=None):
