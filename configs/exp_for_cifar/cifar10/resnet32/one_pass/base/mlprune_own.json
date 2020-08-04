@@ -3,7 +3,7 @@
   "network": "resnet32",
   "depth": 32,
   "dataset": "cifar10",
-  "batch_size": 64,
+  "batch_size": 128,
   "epoch": "10, 10, 10, 10, 10, 10",
   "learning_rate": "1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3",
   "weight_decay": "1e-4, 1e-4, 1e-4, 1e-4, 1e-4, 1e-4",
