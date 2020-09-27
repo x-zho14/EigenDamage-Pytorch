@@ -9,6 +9,8 @@ from utils.common_utils import try_contiguous, PresetLRScheduler
 from utils.network_utils import stablize_bn
 from utils.prune_utils import get_threshold
 import os
+import matplotlib.pyplot as plt
+
 
 class MLPruner:
 
@@ -125,11 +127,27 @@ class MLPruner:
         pruned = 0
         pruned2 = 0
         ratio_list = []
+        idx = 0
+        score_list = []
         for m in self.importances.keys():
+            idx += 1
             imps = self.importances[m]
             mask = prev_masks.get(m, np.ones(m.weight.shape))
             print('Norm is: %s' % norms.get(m, 1))
             # import pdb; pdb.set_trace()
+            scores_normalized = torch.flatten(imps/norms.get(m, 1.0))
+
+            plt.hist(scores_normalized.tolist(), bins=100, density=True)
+            # plt.xlim(0, 1)
+            plt.xlabel("Scores")
+            plt.ylabel("Frequecy")
+            plt.title("Histogram of Scores of Layer "+str(idx)+" of MLPrune")
+            plt.grid(True, linestyle="--")
+            plt.savefig("resnet32" + "_" + str(idx) + "_" + str(0.001) + ".pdf", bbox_inches='tight')
+            plt.clf()
+            plt.cla()
+            score_list.extend(scores_normalized.tolist())
+
             new_masks[m] = np.where(np.abs(imps.data.cpu().numpy()/norms.get(m, 1.0)) <= cutoff, np.zeros(mask.shape), mask)
             new_masks[m] = torch.from_numpy(new_masks[m]).float().cuda().requires_grad_(False)
             # weight_copy = m.weight.data.clone()
