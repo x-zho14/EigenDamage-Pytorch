@@ -124,6 +124,7 @@ class MLPruner:
                 total += m.weight.data.numel()
         pruned = 0
         pruned2 = 0
+        ratio_list = []
         for m in self.importances.keys():
             imps = self.importances[m]
             mask = prev_masks.get(m, np.ones(m.weight.shape))
@@ -151,6 +152,8 @@ class MLPruner:
             #     print("correct")
             print('layer index: {:s} \t total params: {:d} \t remaining params: {:d} \t remaining ratio: {:f}'.
                 format(str(m), new_masks[m].numel(), int(torch.sum(new_masks[m])), int(torch.sum(new_masks[m])) / new_masks[m].numel()))
+            ratio_list.append(int(torch.sum(new_masks[m])) / new_masks[m].numel())
+        print(ratio_list)
         #
         # for m in new_masks.keys():
         #
