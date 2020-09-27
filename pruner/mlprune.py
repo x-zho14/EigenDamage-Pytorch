@@ -138,7 +138,7 @@ class MLPruner:
             scores_normalized = torch.flatten(imps/norms.get(m, 1.0))
 
             plt.hist(scores_normalized.tolist(), bins=100, density=True)
-            plt.xlim(0, scores_normalized.max())
+            plt.xlim(0, scores_normalized.max().item())
             plt.xlabel("Scores")
             plt.ylabel("Frequecy")
             plt.title("Histogram of Scores of Layer "+str(idx)+" of MLPrune")
@@ -173,7 +173,7 @@ class MLPruner:
             ratio_list.append(int(torch.sum(new_masks[m])) / new_masks[m].numel())
         print(ratio_list)
         n, bins, patches = plt.hist(score_list, bins=100, density=True)
-        plt.xlim(0, score_list.max())
+        plt.xlim(0, score_list.max().item())
         plt.xlabel("Scores")
         plt.ylabel("Frequecy")
         plt.title("Histogram of Scores of Layer " + str(idx) + " of MLPrune")
