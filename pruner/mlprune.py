@@ -116,6 +116,7 @@ class MLPruner:
         # print(all_weights)
         cuttoff_index = np.round(ratio * len(all_weights)).astype(int)
         cutoff = all_weights[cuttoff_index]
+        print(cutoff)
         new_masks = dict()
         if prev_masks is None:
             prev_masks = dict()
