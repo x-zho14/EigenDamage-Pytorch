@@ -186,7 +186,7 @@ class MLPruner:
         plt.subplots_adjust(bottom=0.3)
         plt.subplot(141)
         ax = plt.gca()
-        ax.ticklabel_format(axis="y", style="sci")
+        ax.ticklabel_format(style="scientific", scilimits=(0, 0))
         plt.hist(score_layer_dict[1], bins=50)
         plt.xlim(0, 0.02)
         plt.xticks()
@@ -196,7 +196,7 @@ class MLPruner:
 
         plt.subplot(142)
         ax = plt.gca()
-        ax.ticklabel_format(axis="y", style="sci")
+        ax.ticklabel_format(style="scientific", scilimits=(0, 0))
         plt.hist(score_layer_dict[23], bins=50)
         plt.xlim(0, 0.0002)
         plt.xlabel("Weight Importance Score")
@@ -204,7 +204,7 @@ class MLPruner:
 
         plt.subplot(143)
         ax = plt.gca()
-        ax.ticklabel_format(axis="y", style="scientific")
+        ax.ticklabel_format(style="scientific", scilimits=(0, 0))
         plt.hist(score_layer_dict[26], bins=50)
         plt.xlim(0, 0.0001)
         plt.xlabel("Weight Importance Score")
@@ -213,7 +213,7 @@ class MLPruner:
 
         plt.subplot(144)
         ax = plt.gca()
-        ax.ticklabel_format(axis="y", style="scientific")
+        ax.ticklabel_format(style="scientific", scilimits=(0, 0))
         plt.hist(score_layer_dict[30], bins=50)
         plt.xlim(0, 0.0001)
         plt.xlabel("Weight Importance Score")
