@@ -182,7 +182,7 @@ class MLPruner:
         plt.grid(True, linestyle="--")
         plt.savefig("resnet32" + "_" + "whole"+ "_" + str(0.001) + ".pdf", bbox_inches='tight')
 
-        fig = plt.figure(figsize=(18, 4))
+        fig = plt.figure(figsize=(30, 4))
         plt.subplots_adjust(bottom=0.3)
         plt.subplot(141)
         plt.grid(True, linestyle="--")
