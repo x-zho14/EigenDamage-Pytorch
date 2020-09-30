@@ -182,9 +182,10 @@ class MLPruner:
         plt.grid(True, linestyle="--")
         plt.savefig("resnet32" + "_" + "whole"+ "_" + str(0.001) + ".pdf", bbox_inches='tight')
 
-        fig = plt.figure(figsize=(16, 4))
+        fig = plt.figure(figsize=(18, 4))
         plt.subplots_adjust(bottom=0.3)
         plt.subplot(141)
+        plt.grid(True, linestyle="--")
         ax = plt.gca()
         ax.ticklabel_format(style="scientific", scilimits=(0, 0))
         plt.hist(score_layer_dict[1], bins=50)
@@ -195,6 +196,7 @@ class MLPruner:
         plt.title("Layer " + str(1))
 
         plt.subplot(142)
+        plt.grid(True, linestyle="--")
         ax = plt.gca()
         ax.ticklabel_format(style="scientific", scilimits=(0, 0))
         plt.hist(score_layer_dict[23], bins=50)
@@ -203,6 +205,7 @@ class MLPruner:
         plt.title("Layer " + str(23))
 
         plt.subplot(143)
+        plt.grid(True, linestyle="--")
         ax = plt.gca()
         ax.ticklabel_format(style="scientific", scilimits=(0, 0))
         plt.hist(score_layer_dict[26], bins=50)
@@ -212,6 +215,7 @@ class MLPruner:
         plt.savefig('histogram.pdf', bbox_inches='tight')
 
         plt.subplot(144)
+        plt.grid(True, linestyle="--")
         ax = plt.gca()
         ax.ticklabel_format(style="scientific", scilimits=(0, 0))
         plt.hist(score_layer_dict[30], bins=50)
