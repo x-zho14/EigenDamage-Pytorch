@@ -130,6 +130,7 @@ class MLPruner:
         ratio_list = []
         idx = 0
         score_list = []
+        score_layer_dict = {}
         for m in self.importances.keys():
             idx += 1
             imps = self.importances[m]
@@ -137,8 +138,8 @@ class MLPruner:
             print('Norm is: %s' % norms.get(m, 1))
             # import pdb; pdb.set_trace()
             scores_normalized = torch.flatten(imps/norms.get(m, 1.0))
-
-            plt.hist(scores_normalized.tolist(), bins=100, density=True)
+            score_layer_dict[idx] = scores_normalized.tolist()
+            plt.hist(scores_normalized.tolist(), bins=50, density=True)
             plt.xlim(0, scores_normalized.max().item())
             plt.xlabel("Scores")
             plt.ylabel("Frequecy")
@@ -180,6 +181,44 @@ class MLPruner:
         plt.title("Histogram of Scores of Layer " + str(idx) + " of MLPrune")
         plt.grid(True, linestyle="--")
         plt.savefig("resnet32" + "_" + "whole"+ "_" + str(0.001) + ".pdf", bbox_inches='tight')
+
+        fig = plt.figure(figsize=(16, 4))
+        plt.subplots_adjust(bottom=0.3)
+        plt.subplot(141)
+        ax = plt.gca()
+        ax.ticklabel_format(axis="y", style="sci")
+        plt.hist(score_layer_dict[1], bins=50)
+        plt.xlim(0, 1)
+        plt.xticks()
+        plt.xlabel("Weight Importance Score")
+        plt.ylabel("# of Weights")
+        plt.title("Layer " + str(1))
+
+        plt.subplot(142)
+        ax = plt.gca()
+        ax.ticklabel_format(axis="y", style="sci")
+        plt.hist(score_layer_dict[23], bins=50)
+        plt.xlim(0, 1)
+        plt.xlabel("Weight Importance Score")
+        plt.title("Layer " + str(23))
+
+        plt.subplot(143)
+        ax = plt.gca()
+        ax.ticklabel_format(axis="y", style="scientific")
+        plt.hist(score_layer_dict[26], bins=50)
+        plt.xlim(0, 1)
+        plt.xlabel("Weight Importance Score")
+        plt.title("Layer " + str(26))
+        plt.savefig('histogram.pdf', bbox_inches='tight')
+
+        plt.subplot(144)
+        ax = plt.gca()
+        ax.ticklabel_format(axis="y", style="scientific")
+        plt.hist(score_layer_dict[30], bins=50)
+        plt.xlim(0, 1)
+        plt.xlabel("Weight Importance Score")
+        plt.title("Layer " + str(30))
+        plt.savefig('histogram.pdf', bbox_inches='tight')
         #
         # for m in new_masks.keys():
         #
