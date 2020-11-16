@@ -260,7 +260,7 @@ class MLPruner:
         plt.title("Layer " + str(26))
         # plt.savefig('histogram_18.pdf', bbox_inches='tight')
 
-        plt.subplot(24)
+        plt.subplot(224)
         plt.grid(True, linestyle="--")
         ax = plt.gca()
         ax.ticklabel_format(style="scientific", scilimits=(0, 0))
