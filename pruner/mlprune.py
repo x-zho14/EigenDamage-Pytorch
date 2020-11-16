@@ -231,7 +231,7 @@ class MLPruner:
         font = {'size': 11}
         matplotlib.rc('font', **font)
         plt.subplots_adjust(bottom=0.3)
-        plt.subplot(141)
+        plt.subplot(221)
         plt.grid(True, linestyle="--")
         ax = plt.gca()
         ax.ticklabel_format(style="scientific", scilimits=(0, 0))
@@ -241,7 +241,7 @@ class MLPruner:
         plt.ylabel("# of Weights")
         plt.title("Layer " + str(1))
 
-        plt.subplot(142)
+        plt.subplot(222)
         plt.grid(True, linestyle="--")
         ax = plt.gca()
         ax.ticklabel_format(style="scientific", scilimits=(0, 0))
@@ -249,7 +249,7 @@ class MLPruner:
         plt.xlim(0, 0.0002)
         plt.title("Layer " + str(23))
 
-        plt.subplot(143)
+        plt.subplot(223)
         plt.grid(True, linestyle="--")
         ax = plt.gca()
         ax.ticklabel_format(style="scientific", scilimits=(0, 0))
@@ -260,7 +260,7 @@ class MLPruner:
         plt.title("Layer " + str(26))
         # plt.savefig('histogram_18.pdf', bbox_inches='tight')
 
-        plt.subplot(144)
+        plt.subplot(24)
         plt.grid(True, linestyle="--")
         ax = plt.gca()
         ax.ticklabel_format(style="scientific", scilimits=(0, 0))
