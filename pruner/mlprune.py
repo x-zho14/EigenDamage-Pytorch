@@ -183,7 +183,7 @@ class MLPruner:
         plt.savefig("resnet32" + "_" + "whole"+ "_" + str(0.001) + ".pdf", bbox_inches='tight')
 
         import matplotlib
-        fig = plt.figure(figsize=(17, 4))
+        fig = plt.figure(figsize=(9, 9))
         font = {'size': 11}
         matplotlib.rc('font', **font)
         plt.subplots_adjust(bottom=0.3)
@@ -194,7 +194,6 @@ class MLPruner:
         plt.hist(score_layer_dict[1], bins=50)
         plt.xlim(0, 0.02)
         plt.xticks()
-        plt.xlabel("Weight Importance Score")
         plt.ylabel("# of Weights")
         plt.title("Layer " + str(1))
 
@@ -204,7 +203,6 @@ class MLPruner:
         ax.ticklabel_format(style="scientific", scilimits=(0, 0))
         plt.hist(score_layer_dict[23], bins=50)
         plt.xlim(0, 0.0002)
-        plt.xlabel("Weight Importance Score")
         plt.title("Layer " + str(23))
 
         plt.subplot(143)
@@ -213,6 +211,7 @@ class MLPruner:
         ax.ticklabel_format(style="scientific", scilimits=(0, 0))
         plt.hist(score_layer_dict[26], bins=50)
         plt.xlim(0, 0.0001)
+        plt.ylabel("# of Weights")
         plt.xlabel("Weight Importance Score")
         plt.title("Layer " + str(26))
         plt.savefig('histogram.pdf', bbox_inches='tight')
@@ -228,7 +227,7 @@ class MLPruner:
         plt.savefig('histogram_17.pdf', bbox_inches='tight')
 
         import matplotlib
-        fig = plt.figure(figsize=(18, 4))
+        fig = plt.figure(figsize=(9, 9))
         font = {'size': 11}
         matplotlib.rc('font', **font)
         plt.subplots_adjust(bottom=0.3)
@@ -239,7 +238,6 @@ class MLPruner:
         plt.hist(score_layer_dict[1], bins=50)
         plt.xlim(0, 0.02)
         plt.xticks()
-        plt.xlabel("Weight Importance Score")
         plt.ylabel("# of Weights")
         plt.title("Layer " + str(1))
 
@@ -249,7 +247,6 @@ class MLPruner:
         ax.ticklabel_format(style="scientific", scilimits=(0, 0))
         plt.hist(score_layer_dict[23], bins=50)
         plt.xlim(0, 0.0002)
-        plt.xlabel("Weight Importance Score")
         plt.title("Layer " + str(23))
 
         plt.subplot(143)
@@ -258,9 +255,10 @@ class MLPruner:
         ax.ticklabel_format(style="scientific", scilimits=(0, 0))
         plt.hist(score_layer_dict[26], bins=50)
         plt.xlim(0, 0.0001)
+        plt.ylabel("# of Weights")
         plt.xlabel("Weight Importance Score")
         plt.title("Layer " + str(26))
-        plt.savefig('histogram_18.pdf', bbox_inches='tight')
+        # plt.savefig('histogram_18.pdf', bbox_inches='tight')
 
         plt.subplot(144)
         plt.grid(True, linestyle="--")
